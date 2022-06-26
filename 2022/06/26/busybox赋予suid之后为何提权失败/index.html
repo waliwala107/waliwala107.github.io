@@ -1,0 +1,227 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><title>busybox赋予suid之后为何提权失败 | Waliwala‘s blog</title><meta name="keywords" content="学习笔记"><meta name="author" content="Waliwala,106845532@qq.com"><meta name="copyright" content="Waliwala"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="busybox赋予suid之后为何提权失败0x00 背景介绍​    最近同事遇到一个问题，他在测试的时候发现busybox被赋予了suid权限，然后根据Gtfobins的描述，可以直接执行下面的命令实现提权。 1busybox sh  可以他在实际环境上执行，最终发现提权没有成功，不知道是什么原因导致的。 下图是Gtfobins的描述截图   ​    之前没有遇到过busybox被赋予suid">
+<meta property="og:type" content="article">
+<meta property="og:title" content="busybox赋予suid之后为何提权失败">
+<meta property="og:url" content="https://waliwala107.github.io/2022/06/26/busybox%E8%B5%8B%E4%BA%88suid%E4%B9%8B%E5%90%8E%E4%B8%BA%E4%BD%95%E6%8F%90%E6%9D%83%E5%A4%B1%E8%B4%A5/index.html">
+<meta property="og:site_name" content="Waliwala‘s blog">
+<meta property="og:description" content="busybox赋予suid之后为何提权失败0x00 背景介绍​    最近同事遇到一个问题，他在测试的时候发现busybox被赋予了suid权限，然后根据Gtfobins的描述，可以直接执行下面的命令实现提权。 1busybox sh  可以他在实际环境上执行，最终发现提权没有成功，不知道是什么原因导致的。 下图是Gtfobins的描述截图   ​    之前没有遇到过busybox被赋予suid">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://static.runoob.com/images/demo/demo3.jpg">
+<meta property="article:published_time" content="2022-06-26T12:27:55.000Z">
+<meta property="article:modified_time" content="2022-06-26T12:43:17.474Z">
+<meta property="article:author" content="Waliwala">
+<meta property="article:tag" content="学习笔记">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://static.runoob.com/images/demo/demo3.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://waliwala107.github.io/2022/06/26/busybox%E8%B5%8B%E4%BA%88suid%E4%B9%8B%E5%90%8E%E4%B8%BA%E4%BD%95%E6%8F%90%E6%9D%83%E5%A4%B1%E8%B4%A5/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    jQuery: 'https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js',
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/js/jquery.justifiedGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/css/justifiedGallery.min.css'
+    },
+    fancybox: {
+      js: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isanchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'busybox赋予suid之后为何提权失败',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2022-06-26 20:43:17'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if (GLOBAL_CONFIG_SITE.isHome && /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 5.4.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data"><div class="data-item is-center"><div class="data-item-link"><a href="/archives/"><div class="headline">文章</div><div class="length-num">4</div></a></div></div><div class="data-item is-center"><div class="data-item-link"><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a></div></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://static.runoob.com/images/demo/demo3.jpg')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">Waliwala‘s blog</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">busybox赋予suid之后为何提权失败</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2022-06-26T12:27:55.000Z" title="发表于 2022-06-26 20:27:55">2022-06-26</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2022-06-26T12:43:17.474Z" title="更新于 2022-06-26 20:43:17">2022-06-26</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="busybox赋予suid之后为何提权失败"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="busybox赋予suid之后为何提权失败"><a href="#busybox赋予suid之后为何提权失败" class="headerlink" title="busybox赋予suid之后为何提权失败"></a>busybox赋予suid之后为何提权失败</h1><h2 id="0x00-背景介绍"><a href="#0x00-背景介绍" class="headerlink" title="0x00 背景介绍"></a>0x00 背景介绍</h2><p>​    最近同事遇到一个问题，他在测试的时候发现busybox被赋予了suid权限，然后根据Gtfobins的描述，可以直接执行下面的命令实现提权。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">busybox sh</span><br></pre></td></tr></table></figure>
+
+<p>可以他在实际环境上执行，最终发现提权没有成功，不知道是什么原因导致的。</p>
+<p>下图是Gtfobins的描述截图</p>
+<img src="https://s1.ax1x.com/2022/06/26/jEVUhQ.png" style="zoom:50%;" />
+
+<p>​    之前没有遇到过busybox被赋予suid权限的情况，所以一直也没有实际动手实验过。接着这个机会，正好查一查为什么提权会失败。</p>
+<h2 id="0x01-问题复现"><a href="#0x01-问题复现" class="headerlink" title="0x01 问题复现"></a>0x01 问题复现</h2><p>在ubuntu18.04的虚机里，来复现下这个问题。</p>
+<p>第一步：赋予suid权限</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chmod u+s /bin/busybox</span><br></pre></td></tr></table></figure>
+
+<img src="https://s1.ax1x.com/2022/06/26/jEV8nP.png" alt="image-20220626194812868" style="zoom:50%;" />
+
+<p>第二步：执行本地提权</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">busybox sh</span><br></pre></td></tr></table></figure>
+
+<p>发现果然提权失败了</p>
+<img src="https://s1.ax1x.com/2022/06/26/jEVrn0.png" alt="image-20220626195004742" style="zoom:50%;" />
+
+<p>至此问题已经复现。</p>
+<h2 id="0x02-问题解决"><a href="#0x02-问题解决" class="headerlink" title="0x02 问题解决"></a>0x02 问题解决</h2><p>因为之前bash被赋予suid权限后，实现本地提权的时候需要加上-p参数。所以这里我直接也试着加上-p参数。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">busybox sh -p</span><br></pre></td></tr></table></figure>
+
+<img src="https://s1.ax1x.com/2022/06/26/jEV1Xt.png" alt="image-20220626195156478" style="zoom:50%;" />
+
+<p>系统直接报非法参数的错误。</p>
+<p>既然直接加-p没有成功，那就想通过-c参数执行脚本文件。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">busybox sh -c &#x27;/bin/bash -p&#x27;</span><br></pre></td></tr></table></figure>
+
+<img src="https://s1.ax1x.com/2022/06/26/jEVG0f.png" alt="image-20220626195541318" style="zoom:50%;" />
+
+<p>依旧没有成功。</p>
+<p>经过查阅相关资料，最终找到了问题的原因：<strong>需要配合配置文件来实现本地提权</strong>。</p>
+<img src="https://s1.ax1x.com/2022/06/26/jEV0cn.png" alt="image-20220626195958305" style="zoom:50%;" />
+
+<p>按照说明的描述，需要创建/etc/busybox.conf，然后配合配置文件来实现提权。</p>
+<p>先了解下参数的说明</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">s：允许USER或GROUP执行APPLET。小程序将在 USER 或 GROUP 下运行无论谁在运行它）。</span><br><span class="line">S：不允许 USER 或 GROUP 执行 APPLET。小程序将在 USER 或 GROUP 下运行。这个选项不是很明智。</span><br><span class="line">x：允许USER/GROUP/others执行APPLET。运行时不会更改 UID/GID。</span><br><span class="line">-：USER/GROUP/others不允许执行APPLET。</span><br></pre></td></tr></table></figure>
+
+<p>这里通过whoami命令来了解配置文件的用法</p>
+<ul>
+<li>情况一：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[SUID]</span><br><span class="line">whoami = s--</span><br></pre></td></tr></table></figure>
+
+<img src="https://s1.ax1x.com/2022/06/26/jEVdpj.png" alt="image-20220626201056705" style="zoom:50%;" />
+
+<p>系统提示不允许执行这个命令。</p>
+<ul>
+<li>情况二：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[SUID]</span><br><span class="line">whoami = s-x</span><br></pre></td></tr></table></figure>
+
+<img src="https://s1.ax1x.com/2022/06/26/jEVBXq.png" alt="image-20220626201231324" style="zoom:50%;" />
+
+<p>可以看到已经是root用户，证明提权可以成功。</p>
+<p>修改配置文件为</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[SUID]</span><br><span class="line">sh = s-x </span><br></pre></td></tr></table></figure>
+
+<img src="https://s1.ax1x.com/2022/06/26/jEVrn0.png" alt="image-20220626201356555" style="zoom:50%;" />
+
+<p>这里执行任何命令系统都会报错。</p>
+<p>那就继续用bash来提权</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">busybox sh -c &#x27;/bin/bash -p&#x27;</span><br></pre></td></tr></table></figure>
+
+<img src="https://s1.ax1x.com/2022/06/26/jEVsBV.png" alt="image-20220626201653816" style="zoom:50%;" />
+
+<p>可以看到euid已经是0，本地提权成功。</p>
+<h2 id="0x03-补充"><a href="#0x03-补充" class="headerlink" title="0x03 补充"></a>0x03 补充</h2><p>至于bash为什么要加-p才能实现提权，可以参考bash的说明</p>
+<blockquote>
+<p>If the shell is started with the effective user (group) id not equal to the real user (group) id, and the -p option is not supplied, no startup files are read, shell functions are not inherited from the environment, the SHELLOPTS, BASHOPTS, CDPATH, and GLOBIGNORE variables, if they appear in the environment, are ignored, and the effective user id is set to the real user id. If the -p option is supplied at invocation, the startup behavior is the same, but the effective user id is not reset.</p>
+</blockquote>
+<p>简单来说就是：如果启动bash时的Effective UID与Real UID不相同，而且没有使用-p参数，则bash会将Effective UID还原成Real UID。</p>
+<h2 id="0x04-总结"><a href="#0x04-总结" class="headerlink" title="0x04 总结"></a>0x04 总结</h2><p>至此busybox被赋予suid是直接执行sh是无法提权的，但是为什么加-p参数会报非法参数错误和busybox sh之后执行系统命令会报“Segmentation fault ”后面还得继续研究。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p><a target="_blank" rel="noopener" href="https://gtfobins.github.io/gtfobins/busybox/#suid">https://gtfobins.github.io/gtfobins/busybox/#suid</a></p>
+<p><a target="_blank" rel="noopener" href="https://git.busybox.net/busybox/plain/Config.in">https://git.busybox.net/busybox/plain/Config.in</a></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:106845532@qq.com">Waliwala</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://waliwala107.github.io/2022/06/26/busybox%E8%B5%8B%E4%BA%88suid%E4%B9%8B%E5%90%8E%E4%B8%BA%E4%BD%95%E6%8F%90%E6%9D%83%E5%A4%B1%E8%B4%A5/">https://waliwala107.github.io/2022/06/26/busybox%E8%B5%8B%E4%BA%88suid%E4%B9%8B%E5%90%8E%E4%B8%BA%E4%BD%95%E6%8F%90%E6%9D%83%E5%A4%B1%E8%B4%A5/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://waliwala107.github.io" target="_blank">Waliwala‘s blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a></div><div class="post_share"><div class="social-share" data-image="https://static.runoob.com/images/demo/demo3.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2022/06/08/Linux%20%E6%8F%90%E6%9D%83%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/"><img class="next-cover" src="https://static.runoob.com/images/demo/demo2.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Linux本地提权学习笔记</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2022/06/08/Linux%20%E6%8F%90%E6%9D%83%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="Linux本地提权学习笔记"><img class="cover" src="https://static.runoob.com/images/demo/demo2.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-06-08</div><div class="title">Linux本地提权学习笔记</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Waliwala</div><div class="author-info__description"></div></div><div class="card-info-data"><div class="card-info-data-item is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">4</div></a></div><div class="card-info-data-item is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a></div></div><a class="button--animated" id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn card-announcement-animation"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#busybox%E8%B5%8B%E4%BA%88suid%E4%B9%8B%E5%90%8E%E4%B8%BA%E4%BD%95%E6%8F%90%E6%9D%83%E5%A4%B1%E8%B4%A5"><span class="toc-number">1.</span> <span class="toc-text">busybox赋予suid之后为何提权失败</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#0x00-%E8%83%8C%E6%99%AF%E4%BB%8B%E7%BB%8D"><span class="toc-number">1.1.</span> <span class="toc-text">0x00 背景介绍</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x01-%E9%97%AE%E9%A2%98%E5%A4%8D%E7%8E%B0"><span class="toc-number">1.2.</span> <span class="toc-text">0x01 问题复现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x02-%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3"><span class="toc-number">1.3.</span> <span class="toc-text">0x02 问题解决</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x03-%E8%A1%A5%E5%85%85"><span class="toc-number">1.4.</span> <span class="toc-text">0x03 补充</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x04-%E6%80%BB%E7%BB%93"><span class="toc-number">1.5.</span> <span class="toc-text">0x04 总结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-number">1.6.</span> <span class="toc-text">参考资料</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2022/06/26/busybox%E8%B5%8B%E4%BA%88suid%E4%B9%8B%E5%90%8E%E4%B8%BA%E4%BD%95%E6%8F%90%E6%9D%83%E5%A4%B1%E8%B4%A5/" title="busybox赋予suid之后为何提权失败"><img src="https://static.runoob.com/images/demo/demo3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="busybox赋予suid之后为何提权失败"/></a><div class="content"><a class="title" href="/2022/06/26/busybox%E8%B5%8B%E4%BA%88suid%E4%B9%8B%E5%90%8E%E4%B8%BA%E4%BD%95%E6%8F%90%E6%9D%83%E5%A4%B1%E8%B4%A5/" title="busybox赋予suid之后为何提权失败">busybox赋予suid之后为何提权失败</a><time datetime="2022-06-26T12:27:55.000Z" title="发表于 2022-06-26 20:27:55">2022-06-26</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/06/08/Linux%20%E6%8F%90%E6%9D%83%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="Linux本地提权学习笔记"><img src="https://static.runoob.com/images/demo/demo2.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux本地提权学习笔记"/></a><div class="content"><a class="title" href="/2022/06/08/Linux%20%E6%8F%90%E6%9D%83%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="Linux本地提权学习笔记">Linux本地提权学习笔记</a><time datetime="2022-06-08T12:56:58.000Z" title="发表于 2022-06-08 20:56:58">2022-06-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/01/18/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E4%B8%AD%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E6%8A%80%E5%B7%A7%E4%B9%8BSMB%E5%8D%8F%E8%AE%AE/" title="渗透测试中文件传输技巧之SMB协议"><img src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="渗透测试中文件传输技巧之SMB协议"/></a><div class="content"><a class="title" href="/2022/01/18/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E4%B8%AD%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E6%8A%80%E5%B7%A7%E4%B9%8BSMB%E5%8D%8F%E8%AE%AE/" title="渗透测试中文件传输技巧之SMB协议">渗透测试中文件传输技巧之SMB协议</a><time datetime="2022-01-18T14:53:58.000Z" title="发表于 2022-01-18 22:53:58">2022-01-18</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/11/04/Vegeta-write-up/" title="Vegeta write up"><img src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Vegeta write up"/></a><div class="content"><a class="title" href="/2021/11/04/Vegeta-write-up/" title="Vegeta write up">Vegeta write up</a><time datetime="2021-11-04T15:26:57.000Z" title="发表于 2021-11-04 23:26:57">2021-11-04</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2022 By Waliwala</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
